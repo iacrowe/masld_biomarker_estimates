@@ -1,6 +1,7 @@
 library(tidyverse)
 library(patchwork)
 
+# import simulated biopsy data, limit to 17.5-22.5mm
 nash_data <-
   read_csv("virtual_slide_manual_threshold_1.25x.csv") %>%
   rename(
@@ -10,6 +11,7 @@ nash_data <-
   ) %>%
   filter(length > 17 & length < 23)
 
+# describe raw data
 sum_original <-
   nash_data %>%
   group_by(f_stage) %>%
@@ -25,29 +27,8 @@ original <-
   left_join(sum_original)
 
 
-color_fill <-
-  c("#1e466e", "#528fad", "#aadce0", "#ffd06f", "#ef8a47")
 
-ggplot(nash_data) +
-  ggdist::stat_slab(aes(y = cpa, x = as.character(f_stage)), fill = "skyblue", alpha = 0.5) +
-  ggdist::stat_dotsinterval(aes(y = cpa, x = as.character(f_stage)), fill = "deepskyblue", side = "topright") +
-  theme_classic()
-
-ggplot(nash_data, aes(x = cpa, y = as.character(f_stage), fill = as.character(f_stage))) +
-  ggdist::stat_slab(alpha = 0.2) +
-  ggdist::stat_dotsinterval(side = "topright",  slab_linewidth = NA) +
-  scale_fill_manual(values = color_fill) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-
-groups_cpa <-
-  tibble(
-    cpa = seq(0, 40, 0.1)
-  ) %>%
-  mutate(cpa = as.character(cpa))
-
-
+# describe data distributions
 ## f0
 f0_data <-
   nash_data %>% 
@@ -161,6 +142,7 @@ F4 <-
 f0_plot / f1_plot / f2_plot / f3_plot / f4_plot
 
 
+# generate data to plot summary distribution data
 sim_data_long <-
   tibble(
     f0 = rlnorm(10000, 1.599, 0.355),
@@ -177,6 +159,11 @@ sim_data_long <-
   mutate(
     f_stage = rep(seq(0, 4, 1), times = 10000)
   )
+
+## plot summary distribution data
+color_fill <-
+  c("#1e466e", "#528fad", "#aadce0", "#ffd06f", "#ef8a47")
+
 
 measured_plus_sim_cpa <-
   ggplot() +
@@ -197,7 +184,15 @@ measured_plus_sim_cpa <-
 
 
 
-## generate prob data
+# generate prob data
+## set up cpa group data for probability calculations
+groups_cpa <-
+  tibble(
+    cpa = seq(0, 40, 0.1)
+  ) %>%
+  mutate(cpa = as.character(cpa))
+
+## join to raw data
 data_wide <-
   groups_cpa %>%
   left_join(F0) %>%
@@ -222,12 +217,9 @@ prob_data <-
     starts_with("prob")
   )
 
-# write_csv(prob_data, "prob_data.csv")
-
-probs <- read_csv("prob_data.csv")
-
+## data to plot
 prob_data_plot <-
-  probs %>%
+  prob_data %>%
   pivot_longer(
     -cpa,
     names_to = "f_stage",
@@ -247,7 +239,7 @@ prob_data_plot <-
   filter(
     cpa > 1.8 & cpa <30)
 
-
+# plot probability per fibrosis stage
 prob_plot <-
   ggplot(prob_data_plot %>% filter(cpa <28)) +
   geom_col(aes(x = cpa, y = probability, fill = f_stage), width = .1) +
@@ -261,7 +253,7 @@ prob_plot <-
   theme(
     legend.position = "right")
 
-
+# generate figure 1
 measured_plus_sim_cpa / prob_plot + 
   plot_annotation(tag_levels = 'A')
 
