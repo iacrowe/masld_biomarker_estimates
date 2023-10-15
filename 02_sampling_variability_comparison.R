@@ -1,5 +1,7 @@
 library(tidyverse)
-
+# functions
+## select patients with appropriate fibrosis stages to match observational data
+### identifies patients from overall 100,000 patient cohort
 bx_select_fn <- function(x, n_pat, prob_f0, prob_f1, prob_f2, prob_f3, prob_f4){
   
   data_f0 <-
@@ -32,6 +34,7 @@ bx_select_fn <- function(x, n_pat, prob_f0, prob_f1, prob_f2, prob_f3, prob_f4){
   
 }
 
+## estimates variability due to sampling for 500 patients across all fibrosis stages
 bx_sim_ratziu_all_fn <- function(x){
   
   a <-
@@ -77,6 +80,7 @@ bx_sim_ratziu_all_fn <- function(x){
   
 }
 
+## estimates variability due to sampling for 500 patients with f2 or f3
 bx_sim_ratziu_f2f3_fn <- function(x){
   
   a <-
@@ -123,10 +127,13 @@ bx_sim_ratziu_f2f3_fn <- function(x){
   
 }
 
+# analysis
+## import patient population
 grey <- read_csv("grey_patients.csv")
 
 n_sim = 1
 
+## estimate sampling across all fibrosis stages
 multi_cpa_sampl_all <-
   replicate(
     n_sim,
@@ -137,11 +144,12 @@ cpa_est_sampl_error_all <-
   bind_rows(multi_cpa_sampl_all) %>%
   mutate(sim = rep(1:n_sim, each = 3))
 
-x <- cpa_est_sampl_error_all %>% select(n) %>% mutate(n2 = c(21, 59, 21))
-x
-chisq.test(x)
+all <- cpa_est_sampl_error_all %>% select(n) %>% mutate(n2 = c(21, 59, 21))
+all
+chisq.test(all)
 
 
+## estimate sampling for fibrosis stages 2 and 3
 multi_cpa_sampl_f2f3 <-
   replicate(
     n_sim,
@@ -152,15 +160,16 @@ cpa_est_sampl_error_f2f3 <-
   bind_rows(multi_cpa_sampl_f2f3) %>%
   mutate(sim = rep(1:n_sim, each = 3))
 
-y <- cpa_est_sampl_error_f2f3 %>% select(n) %>% mutate(n2 = c(15, 26, 7))
-y
-chisq.test(y)
+f2f3 <- cpa_est_sampl_error_f2f3 %>% select(n) %>% mutate(n2 = c(15, 26, 7))
+f2f3
+chisq.test(f2f3)
 
-y_prop <-
-  y %>%
+## manipulate to plot
+f2f3_prop <-
+  f2f3 %>%
   mutate(
-    cpa_prop = n / sum(y$n),
-    ratziu_prop = n2 / sum(y$n2)
+    cpa_prop = n / sum(f2f3$n),
+    ratziu_prop = n2 / sum(f2f3$n2)
   ) %>%
   select(ends_with("prop")) %>%
   mutate(f_change = c("improved", "no change", "worsened")) %>%
@@ -171,10 +180,12 @@ y_prop <-
     dataset = if_else(dataset == "cpa_prop", "Simulated", "Observed")
   )
 
+
+## plot
 color_fill <-
   c("#1e466e", "#aadce0", "#ef8a47")
 
-ggplot(y_prop) +
+ggplot(f2f3_prop) +
   geom_col(aes(x = dataset, y = proportion, fill = f_change)) +
   scale_fill_manual(
     values = color_fill, 
@@ -183,7 +194,7 @@ ggplot(y_prop) +
   theme_classic() +
   theme(axis.title.x = element_blank())
 
-
+## supplemental figure 2
 ggsave("Supplementary Figure 2.jpeg", device = "jpeg", width = 4, height = 6, units = "in")
 
 
