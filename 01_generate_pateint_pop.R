@@ -39,7 +39,7 @@ simulate_biopsy <- function(simulated_data) {
 # generate distribution for test population, n = 100,000
 n_sim <- 200000
 
-## plot distribtuion of fibrosis
+## plot distribution of fibrosis
 dist_plot <-
   ggplot() +
   geom_density(aes(x = rbeta(n_sim, 1.5, 4) * 30)) +
@@ -49,7 +49,7 @@ dist_plot <-
   ggtitle("Estimated distribution of fibrosis in cohorts enrolled in biomarkler studies")
 
 
-## generatae 100,000 simulated patients across that distribution
+## generate 100,000 simulated patients across that distribution
 sim_biopsy_grey <-
   tibble(
     cpa = round(rbeta(n_sim, 1.5, 4) * 30, 1),
