@@ -217,6 +217,9 @@ prob_data <-
     starts_with("prob")
   )
 
+### write data out for use in future scripts
+write_csv(prob_data, "prob_data.csv") # not run, included in repo
+
 ## data to plot
 prob_data_plot <-
   prob_data %>%
