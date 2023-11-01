@@ -115,49 +115,6 @@ roc_cuts_advanced <- function(x) {
   
 }
 
-## auc for significant fibrosis
-roc_significant <- function(x) {
-  
-  x %>% 
-    mutate(
-      est_stage = 
-        case_when(
-          throw_est < prob_f0 ~ 0,
-          throw_est > prob_f0 & throw_est < prob_f0 + prob_f1 ~ 1,
-          throw_est > prob_f0 + prob_f1 & throw_est < prob_f0 + prob_f1 + prob_f2 ~ 2,
-          throw_est > prob_f0 + prob_f1 + prob_f2 & throw_est < prob_f0 + prob_f1 + prob_f2 + prob_f3 ~ 3,
-          throw_est > prob_f0 + prob_f1 + prob_f2 + prob_f3 ~ 4,
-          TRUE ~ 5
-        )
-    ) %>% 
-    filter(est_stage != 5) %>%
-    roc(significant, est_stage, levels = c("early", "significant"))
-  
-}
-
-## sensitivity and specificity for significant fibrosis
-roc_cuts_significant <- function(x) {
-  
-  x %>% 
-    mutate(
-      est_stage = 
-        case_when(
-          throw_est < prob_f0 ~ 0,
-          throw_est > prob_f0 & throw_est < prob_f0 + prob_f1 ~ 1,
-          throw_est > prob_f0 + prob_f1 & throw_est < prob_f0 + prob_f1 + prob_f2 ~ 2,
-          throw_est > prob_f0 + prob_f1 + prob_f2 & throw_est < prob_f0 + prob_f1 + prob_f2 + prob_f3 ~ 3,
-          throw_est > prob_f0 + prob_f1 + prob_f2 + prob_f3 ~ 4,
-          TRUE ~ 5
-        )
-    ) %>% 
-    filter(est_stage != 5) %>%
-    roc(significant, est_stage, levels = c("early", "significant")) %>%
-    coords(
-      transpose = FALSE,
-      c(1, 2, 3, 4)
-    )
-  
-}
 
 # estimate true biomarker performance
 ## solution derived from Waikar et al, doi: 10.1681/ASN.2010111124 
