@@ -1,6 +1,5 @@
 library(tidyverse)
 library(pROC)
-library(patchwork)
 
 
 #### functions ####
